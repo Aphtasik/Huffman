@@ -5,7 +5,7 @@ __revision__ = '$Id: huffman.py 2019-04-01'
 """
 Huffman homework
 2019
-@author: login
+@author: alexandre.gautier
 """
 
 from algopy import bintree
@@ -23,8 +23,24 @@ def buildfrequencylist(dataIN):
     """
     Builds a tuple list of the character frequencies in the input.
     """
-    # FIXME
-    pass
+    histo = []
+
+    for elt in dataIN:
+        found = False
+        i = 0
+        while i < len(histo) and not found:
+            if histo[i][1] == elt:
+                found = True
+                histo[i][0] += 1
+            i += 1
+        if not found:
+            histo.append([1, elt])
+
+    histoChar = []
+    for liste in histo:
+        histoChar.append((liste[0], liste[1]))
+
+    return histoChar
 
 
 def buildHuffmantree(inputList):
