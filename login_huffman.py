@@ -43,20 +43,74 @@ def buildfrequencylist(dataIN):
     return histoChar
 
 
+def __buildHuffmantree(H, lH):
+    """
+    Fonction récursive qui grâce à un heap, fusionne petit à petit
+    les éléments en arbre de Huffman.
+    :param H: Heap (val, elt)
+    :param lH: int : Longueur du Heap
+    :return: Bintree : L'arbre de Huffman correspondant
+    """
+    if lH < 3:
+        lastTuple = H.pop()
+        return lastTuple[1] #On retourne l'abre restant
+    else:
+        min1 = H.pop()
+        min2 = H.pop()
+
+        addMinVal = min1[0] + min2[0]
+        B = bintree.BinTree(None, min2[1], min1[1]) #min1 à droite car c'est le plus petit des deux min
+
+        H.push((addMinVal, B)) #on push la nouvelle comb
+
+        return __buildHuffmantree(H, lH-1)
+
+
 def buildHuffmantree(inputList):
     """
     Processes the frequency list into a Huffman tree according to the algorithm.
     """
-    # FIXME
-    pass
+    H = heap.Heap()
+    lL = len(inputList)
+    for i in range(lL): #creation du Heap qui va servir comme outil
+        H.push((inputList[i][0], inputList[i][1]))
+    if H.isempty():
+        return bintree.BinTree(None, None, None)
+    else:
+        return __buildHuffmantree(H, lL + 1)
+
+
+def __encodedata(huffmanTree, c, occ = ""):
+    """
+    Fonction recursive qui prend un caractere et renvoie son equivalent binaire dans l'arbre
+    :param huffmanTree: BinTree
+    :param c: char : caractere dont on cherche l'ecriture binaire
+    :param occ: string : ecriture binaire de c
+    :return: string
+    """
+    if huffmanTree.left == None:
+        if huffmanTree.Key == c:
+            return occ
+        else:
+            res = __encodedata(huffmanTree.left, c, occ + '0')
+            if res != None:
+                return res
+            else:
+                return __encodedata(huffmanTree.righ, c, occ + '1')
 
 
 def encodedata(huffmanTree, dataIN):
     """
     Encodes the input string to its binary string representation.
     """
-    # FIXME
-    pass
+    if huffmanTree == None:
+        return None
+    else:
+        fullString = ""
+        for c in dataIN:
+            fullString += __encodedata(huffmanTree, c)
+
+    return fullString
 
 
 def encodetree(huffmanTree):
