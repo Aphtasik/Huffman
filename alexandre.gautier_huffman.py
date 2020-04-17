@@ -88,27 +88,32 @@ def __encodedata(huffmanTree, c, occ = ""):
     :param occ: string : ecriture binaire de c
     :return: string
     """
-    if huffmanTree.left == None:
-        if huffmanTree.Key == c:
+    if huffmanTree.left == None and huffmanTree.right == None:
+        if huffmanTree.key == c:
             return occ
         else:
-            res = __encodedata(huffmanTree.left, c, occ + '0')
-            if res != None:
-                return res
-            else:
-                return __encodedata(huffmanTree.righ, c, occ + '1')
+            return ""
+    else:
+        if huffmanTree.left == None:
+            left = ""
+        else:
+            left = __encodedata(huffmanTree.left, c ,occ + '0')
+
+        if huffmanTree.right == None:
+            right = ""
+        else:
+            right = __encodedata(huffmanTree.right, c, occ + '1')
+
+        return left+right
 
 
 def encodedata(huffmanTree, dataIN):
     """
     Encodes the input string to its binary string representation.
     """
-    if huffmanTree == None:
-        return None
-    else:
-        fullString = ""
-        for c in dataIN:
-            fullString += __encodedata(huffmanTree, c)
+    fullString = "" #sinon on créé une string qu'on rempli pr chaque char
+    for c in dataIN:
+        fullString += __encodedata(huffmanTree, c)
 
     return fullString
 
@@ -143,12 +148,37 @@ def compress(dataIn):
 ################################################################################
 ## DECOMPRESSION
 
+
+def __decodedata(huffmanTree, dataIN, i):
+    """
+    Fonction recursive qui a partir de la string binaire trouve
+    le chemin vers la feuille contenant le caratere a ecrire
+    :param huffmanTree: BinTree
+    :param dataIN: String : La string de binaire
+    :param i: int
+    :return: charF
+    """
+    if huffmanTree.left == None and huffmanTree.right == None:
+        return huffmanTree.key, i
+    elif dataIN[i] == '0':
+        return __decodedata(huffmanTree.left, dataIN, i+1)
+    else:
+        return  __decodedata(huffmanTree.right, dataIN, i+1)
+
+
 def decodedata(huffmanTree, dataIN):
     """
     Decode a string using the corresponding huffman tree into something more readable.
     """
-    # FIXME
-    pass
+    lD = len(dataIN)
+    totalString = ""
+    i = 0
+
+    while i < lD:
+        c, i = __decodedata(huffmanTree, dataIN, i)
+        totalString += c
+
+    return totalString
 
     
 def decodetree(dataIN):
