@@ -58,8 +58,11 @@ def __buildHuffmantree(H, lH):
         min1 = H.pop()
         min2 = H.pop()
 
+        BR = bintree.BinTree(min1[1], None, None)
+        BL = bintree.BinTree(min2[1], None, None)
+
         addMinVal = min1[0] + min2[0]
-        B = bintree.BinTree(None, min2[1], min1[1]) #min1 à droite car c'est le plus petit des deux min
+        B = bintree.BinTree(None, BL, BR) #min1 à droite car c'est le plus petit des deux min
 
         H.push((addMinVal, B)) #on push la nouvelle comb
 
@@ -97,7 +100,7 @@ def __encodedata(huffmanTree, c, occ = ""):
         if huffmanTree.left == None:
             left = ""
         else:
-            left = __encodedata(huffmanTree.left, c ,occ + '0')
+            left = __encodedata(huffmanTree.left, c, occ + '0')
 
         if huffmanTree.right == None:
             right = ""
@@ -118,14 +121,56 @@ def encodedata(huffmanTree, dataIN):
     return fullString
 
 
+def intToBin(x):
+    """
+    Converti un entier en un nombre binaire sur 8 bit sous forme de string
+    :param x: int : l'entier a convertir
+    :return: string : le code 8 bit de l'entier
+    """
+    l = []
+    while x != 1:
+        if x % 2 == 0:
+            l.append(0)
+        else:
+            l.append(1)
+        x //=2
+    l.append(1)
+    lL = len(l)
+
+    binString = ""
+    fillWithZero = 8 - lL
+    while fillWithZero != 0:
+        binString += '0'
+        fillWithZero -= 1
+
+    lL -= 1
+    while lL >= 0:
+        binString += str(l[lL])
+        lL -= 1
+
+    return binString
+
+
 def encodetree(huffmanTree):
     """
     Encodes a huffman tree to its binary representation using a preOrder traversal:
         * each leaf key is encoded into its binary representation on 8 bits preceded by '1'
         * each time we go left we add a '0' to the result
     """
-    # FIXME
-    pass
+    if huffmanTree.left == None and huffmanTree.right == None:
+        return '1' + intToBin(ord(huffmanTree.key))
+    else:
+        if huffmanTree.left == None:
+            left = ""
+        else:
+            left = encodetree(huffmanTree.left)
+
+        if huffmanTree.right == None:
+            right = ""
+        else:
+            right = encodetree(huffmanTree.right)
+
+        return '0' + left + right
 
 
 def tobinary(dataIN):
