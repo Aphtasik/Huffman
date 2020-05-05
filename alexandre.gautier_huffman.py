@@ -19,6 +19,77 @@ from algopy import heap
 ###############################################################################
 ## COMPRESSION
 
+
+def __binToIntWithoutIndex(s):
+    """
+    FOnction qui prend une string faite de 0 et 1 et converti le tout
+    en son equivalent en nombre et enfin sa correspondance dans la table ASCII
+    :param s: string : la chaine de 0 et 1
+    :return: char
+    """
+    lS = len(s)
+    somme = 0
+    powTwo = 1
+    i = lS -1
+
+    while i >= 0:
+        if s[i] == '1':
+            somme += powTwo
+        powTwo *= 2
+        i-=1
+    return chr(somme)
+
+
+def __binToInt(s, i):
+    """
+    FOnction qui prend une string faite de 0 et 1 et converti le tout
+    en son equivalent en nombre et enfin sa correspondance dans la table ASCII
+    :param s: string : la chaine de 0 et 1
+    :return: char
+    """
+    if len(s)>=8:
+        somme = 0
+        powTwo = 1
+        imax = i + 7
+
+        while imax >= i:
+            if s[imax] == '1':
+                somme += powTwo
+            powTwo *= 2
+            imax -= 1
+        return chr(somme), i+8
+
+
+def __intToBin(x):
+    """
+    Converti un entier en un nombre binaire sur 8 bit sous forme de string
+    :param x: int : l'entier a convertir
+    :return: string : le code 8 bit de l'entier
+    """
+    l = []
+    while x > 1:
+        if x % 2 == 0:
+            l.append(0)
+        else:
+            l.append(1)
+        x //=2
+    l.append(1)
+    lL = len(l)
+
+    binString = ""
+    fillWithZero = 8 - lL
+    while fillWithZero != 0:
+        binString += '0'
+        fillWithZero -= 1
+
+    lL -= 1
+    while lL >= 0:
+        binString += str(l[lL])
+        lL -= 1
+
+    return binString
+
+
 def buildfrequencylist(dataIN):
     """
     Builds a tuple list of the character frequencies in the input.
@@ -58,11 +129,8 @@ def __buildHuffmantree(H, lH):
         min1 = H.pop()
         min2 = H.pop()
 
-        BR = bintree.BinTree(min1[1], None, None)
-        BL = bintree.BinTree(min2[1], None, None)
-
         addMinVal = min1[0] + min2[0]
-        B = bintree.BinTree(None, BL, BR) #min1 à droite car c'est le plus petit des deux min
+        B = bintree.BinTree(None, min2[1], min1[1]) #min1 à droite car c'est le plus petit des deux min
 
         H.push((addMinVal, B)) #on push la nouvelle comb
 
@@ -76,7 +144,8 @@ def buildHuffmantree(inputList):
     H = heap.Heap()
     lL = len(inputList)
     for i in range(lL): #creation du Heap qui va servir comme outil
-        H.push((inputList[i][0], inputList[i][1]))
+        B = bintree.BinTree(inputList[i][1], None, None)
+        H.push((inputList[i][0], B))
     if H.isempty():
         return bintree.BinTree(None, None, None)
     else:
@@ -121,36 +190,6 @@ def encodedata(huffmanTree, dataIN):
     return fullString
 
 
-def intToBin(x):
-    """
-    Converti un entier en un nombre binaire sur 8 bit sous forme de string
-    :param x: int : l'entier a convertir
-    :return: string : le code 8 bit de l'entier
-    """
-    l = []
-    while x != 1:
-        if x % 2 == 0:
-            l.append(0)
-        else:
-            l.append(1)
-        x //=2
-    l.append(1)
-    lL = len(l)
-
-    binString = ""
-    fillWithZero = 8 - lL
-    while fillWithZero != 0:
-        binString += '0'
-        fillWithZero -= 1
-
-    lL -= 1
-    while lL >= 0:
-        binString += str(l[lL])
-        lL -= 1
-
-    return binString
-
-
 def encodetree(huffmanTree):
     """
     Encodes a huffman tree to its binary representation using a preOrder traversal:
@@ -158,7 +197,7 @@ def encodetree(huffmanTree):
         * each time we go left we add a '0' to the result
     """
     if huffmanTree.left == None and huffmanTree.right == None:
-        return '1' + intToBin(ord(huffmanTree.key))
+        return '1' + __intToBin(ord(huffmanTree.key))
     else:
         if huffmanTree.left == None:
             left = ""
@@ -177,17 +216,31 @@ def tobinary(dataIN):
     """
     Compresses a string containing binary code to its real binary value.
     """
-    # FIXME
-    pass
+    encodedString = ""
+    stringPart = ""
+    lD = len(dataIN)
+    count = 0
+
+    for i in range(lD):
+        if count == 8:
+            encodedString += __binToIntWithoutIndex(stringPart)
+            stringPart = ""
+            count = 0
+        stringPart += dataIN[i]
+        count += 1
+
+    encodedString += __binToIntWithoutIndex(stringPart)
+
+    return encodedString, 8-count
 
 
 def compress(dataIn):
     """
     The main function that makes the whole compression process.
     """
-    
-    # FIXME
-    pass
+    tree = buildHuffmantree(buildfrequencylist(dataIn))
+
+    return tobinary(encodedata(tree, dataIn)), tobinary(encodetree(tree))
 
     
 ################################################################################
@@ -226,27 +279,69 @@ def decodedata(huffmanTree, dataIN):
     return totalString
 
     
+def __decodetree(dataIN, i, lD):
+    """
+    Fonction recursive qui créé l'abre a partir de la string de départ.
+    :param dataIN: string : string de départ
+    :param i: int : l'indexe
+    :param lD: int : longueur de dataIN
+    :return: BinTree, int : le bintree entrain d'être créé et l'indexe courant
+    """
+    B = None
+    if i < lD:
+        if dataIN[i] == '1':
+            c, newi = __binToInt(dataIN, i+1)
+            B = bintree.BinTree(c , None, None) #feuille dont la clef est le char
+            i = newi
+        else:
+            i+=1
+            Bl, il = __decodetree(dataIN, i, lD)
+            Br, i = __decodetree(dataIN, il, lD)
+
+            B = bintree.BinTree(None, Bl, Br)
+
+    return B, i
+
+
 def decodetree(dataIN):
     """
     Decodes a huffman tree from its binary representation:
         * a '0' means we add a new internal node and go to its left node
-        * a '1' means the next 8 values are the encoded character of the current leaf         
+        * a '1' means the next 8 values are the encoded character of the current leaf
     """
-    # FIXME
-    pass
+    tree, i = __decodetree(dataIN, 0, len(dataIN))
+    return tree
 
 
 def frombinary(dataIN, align):
     """
     Retrieve a string containing binary code from its real binary value (inverse of :func:`toBinary`).
     """
-    # FIXME
-    pass
+    lD = len(dataIN)
+    binString = ""
+
+    for i in range(lD - 1):
+        binString += __intToBin(ord(dataIN[i]))
+
+    if ord(dataIN[lD - 1]) != 0:
+        last = __intToBin(ord(dataIN[lD - 1]))
+        lastStr = ""
+
+        for j in range(align, 8):
+            lastStr += last[j]
+
+        binString += lastStr
+    else:
+        binString += '0'
+
+    return binString
 
 
 def decompress(data, dataAlign, tree, treeAlign):
     """
     The whole decompression process.
     """
-    # FIXME
-    pass
+    fromBinData = frombinary(data, dataAlign)
+    fromBinTree = frombinary(tree, treeAlign)
+
+    return decodedata(decodetree(fromBinTree), fromBinData)
