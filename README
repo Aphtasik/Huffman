@@ -1,0 +1,27 @@
+HUFFMAN CODING AND DECODING ALGORITHM
+ 
+ 
+I - Description
+
+  The Huffman algorithm is used to compress files. It has a compression ratio in-between 40 and 60 percent. 
+
+  Traditionally, a character of a text file is encoded on 8 bits independently of the character’s appearance frequency in the file.
+The Huffman algorithm changes the characters’ encoding to take into account appearance frequency: it encodes the most frequent characters on 1 or 2 bits.
+The less frequent ones will be encoded on an increasingly bigger number of bits. A file containing the text AAAAAA will now have a size of 6 bits instead of 6x8 = 48 bits (A shall be encoded on 1 bit).
+
+
+II - Steps
+
+Steps to compress the text file:
+1) Build a frequency table of each character occurrence
+2) Build the Huffman Tree
+3) Text encoding
+4) Tree encoding
+5) Binarization
+
+Decompression is done thanks to opposite functions:
+- Decode Text
+- Decode Tree
+- Binary to character
+
+
