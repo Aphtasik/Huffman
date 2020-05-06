@@ -1,5 +1,8 @@
 HUFFMAN CODING AND DECODING ALGORITHM
  
+This Work as been done thanks to the help of EPITA, an engineering school specialised in computer science.
+
+WARNING : The functions presented in the .py file may not be all fully optimised ! It may not be the most efficient way to compress and decompress file.
  
 I - Description
 
